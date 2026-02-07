@@ -14,6 +14,7 @@ let package = Package(
     ],
     products: [
         .library(name: "SwiftyLyrics", targets: ["SwiftyLyrics"]),
+        .library(name: "LyricLabel", targets: ["LyricLabel"]),
     ],
     targets: [
         .target(name: "SwiftyLyrics"),
@@ -24,5 +25,6 @@ let package = Package(
                 .process("Examples"),
             ]
         ),
+        .target(name: "LyricLabel", dependencies: ["SwiftyLyrics"]),
     ]
 )
