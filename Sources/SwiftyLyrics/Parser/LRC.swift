@@ -63,8 +63,7 @@ extension Lyrics.Parser.LRC: LyricsParsing {
 
             if text.isEmpty {
                 if let seconds = try? parse(timestamp: tagString) {
-                    let line = EmptyLine(begin: seconds)
-                    lines.append(line)
+                    lines.append(TextLine(begin: seconds))
                 } else {
                     // TODO: tags
                 }
@@ -73,7 +72,7 @@ extension Lyrics.Parser.LRC: LyricsParsing {
                 let line = TextLine(
                     begin: seconds,
                     slices: [
-                        .text(begin: seconds, text: text),
+                        .text(text, begin: seconds),
                     ]
                 )
                 lines.append(line)
