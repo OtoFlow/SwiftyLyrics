@@ -4,7 +4,7 @@ import UIKit
 import AppKit
 #endif
 
-@_exported import SwiftyLyrics
+import SwiftyLyrics
 
 public final class LyricTextLayer: CALayer {
 

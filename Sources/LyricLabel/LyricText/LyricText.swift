@@ -1,7 +1,21 @@
 import SwiftUI
+@_exported import SwiftyLyrics
 
 @MainActor
 public struct LyricText {
+
+    public var line: TextLine
+
+    @Environment(\.lyricTextFont) private var lyricLabelFont
+
+    public init(line: TextLine) {
+        self.line = line
+    }
+
+    func updateView(_ view: LyricTextLabel) {
+        view.textLayer.textLine = line
+        view.textLayer.font = lyricLabelFont ?? .preferredFont(forTextStyle: .body)
+    }
 
     func sizeThatFits(_ proposal: ProposedViewSize, view: LyricTextLabel) -> CGSize? {
         switch proposal {
@@ -16,8 +30,7 @@ public struct LyricText {
     }
 }
 
-#if os(iOS)
-
+#if canImport(UIKit)
 extension LyricText: UIViewRepresentable {
 
     public func makeUIView(context: Context) -> LyricTextLabel {
@@ -25,12 +38,26 @@ extension LyricText: UIViewRepresentable {
     }
 
     public func updateUIView(_ uiView: LyricTextLabel, context: Context) {
-
+        updateView(uiView)
     }
 
     public func sizeThatFits(_ proposal: ProposedViewSize, uiView: LyricTextLabel, context: Context) -> CGSize? {
         sizeThatFits(proposal, view: uiView)
     }
 }
+#else
+extension LyricText: NSViewRepresentable {
 
+    public func makeNSView(context: Context) -> LyricTextLabel {
+        .init()
+    }
+
+    public func updateNSView(_ nsView: LyricTextLabel, context: Context) {
+        updateView(nsView)
+    }
+
+    public func sizeThatFits(_ proposal: ProposedViewSize, nsView: LyricTextLabel, context: Context) -> CGSize? {
+        sizeThatFits(proposal, view: nsView)
+    }
+}
 #endif

@@ -8,7 +8,7 @@ public struct TextLine: Line {
 
     public var slices: [Slice]?
 
-    package init(
+    public init(
         begin: TimeInterval? = nil,
         end: TimeInterval? = nil,
         slices: [Slice]? = nil

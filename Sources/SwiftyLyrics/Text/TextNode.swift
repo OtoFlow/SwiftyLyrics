@@ -8,7 +8,7 @@ public struct TextNode: Text, Hashable {
 
     public let text: String
 
-    package init(
+    public init(
         begin: TimeInterval,
         end: TimeInterval? = nil,
         text: String

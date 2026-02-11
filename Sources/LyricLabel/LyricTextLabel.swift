@@ -9,7 +9,6 @@ public enum TextAlignment {
 open class LyricTextLabel: PlatformView {
 
     #if canImport(UIKit)
-
     open override class var layerClass: AnyClass {
         LyricTextLayer.self
     }
@@ -23,9 +22,7 @@ open class LyricTextLabel: PlatformView {
         textLayer.layoutNodesIfNeeded()
         return textLayer.textBounds.size
     }
-
     #else
-
     public let textLayer = LyricTextLayer()
 
     public override init(frame: CGRect) {
@@ -47,6 +44,5 @@ open class LyricTextLabel: PlatformView {
         textLayer.layoutNodesIfNeeded()
         return textLayer.textBounds.size
     }
-
     #endif
 }
