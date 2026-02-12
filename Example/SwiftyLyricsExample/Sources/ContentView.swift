@@ -27,9 +27,26 @@ struct ContentView: View {
         ]
     )
 
+    @State var interactiveState: LyricText.InteractiveState?
+
+    @State var timeOffset: TimeInterval = .zero
+
     var body: some View {
-        LyricText(line: line)
+        VStack {
+            LyricText(
+                line: line,
+                interactiveState: $interactiveState
+            )
             .lyricTextFont(.preferredFont(forTextStyle: .largeTitle))
+
+            Slider(value: $timeOffset, in: 3.490...5.848) { begin in
+                interactiveState = begin ? .pause : .resume
+            }
+            .onChange(of: timeOffset) { oldValue, newValue in
+                interactiveState = .offset(newValue)
+            }
+        }
+        .padding()
     }
 }
 

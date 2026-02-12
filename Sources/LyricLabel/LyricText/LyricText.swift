@@ -4,17 +4,36 @@ import SwiftUI
 @MainActor
 public struct LyricText {
 
+    public enum InteractiveState {
+        case pause
+        case offset(TimeInterval)
+        case resume
+    }
+
     public var line: TextLine
+
+    @Binding private var interactiveState: InteractiveState?
 
     @Environment(\.lyricTextFont) private var lyricLabelFont
 
-    public init(line: TextLine) {
+    public init(line: TextLine, interactiveState: Binding<InteractiveState?>) {
         self.line = line
+        self._interactiveState = interactiveState
     }
 
     func updateView(_ view: LyricTextLabel) {
         view.textLayer.textLine = line
         view.textLayer.font = lyricLabelFont ?? .preferredFont(forTextStyle: .body)
+
+        switch interactiveState {
+        case .pause:
+            view.textLayer.pause()
+        case .offset(let offset):
+            view.textLayer.update(offset)
+        case .resume:
+            view.textLayer.resume()
+        case nil: ()
+        }
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, view: LyricTextLabel) -> CGSize? {

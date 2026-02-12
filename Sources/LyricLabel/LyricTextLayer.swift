@@ -132,8 +132,7 @@ public final class LyricTextLayer: CALayer {
                 forGlyphRange: range,
                 in: textContainer
             ).offsetBy(dx: -anchorX, dy: .zero)
-            let (layer, _) = findOrCreateLayer(node)
-            layer.frame = boundingRect
+            let (layer, _) = findOrCreateLayer(node, frame: boundingRect)
             addSublayer(layer)
             layer.setNeedsDisplay()
         }
@@ -148,14 +147,29 @@ public final class LyricTextLayer: CALayer {
         return false
     }
 
-    private func findOrCreateLayer(_ text: IndexedText) -> (LyricTextNodeLayer, Bool) {
+    private func findOrCreateLayer(_ text: IndexedText, frame: CGRect) -> (LyricTextNodeLayer, Bool) {
         if let layer = textLayers[text] {
+            layer.frame = frame
             return (layer, false)
         }
         let layer = LyricTextNodeLayer(text)
         layer.delegate = self
         textLayers[text] = layer
+        layer.frame = frame
+        layer.setProgress(duration: 2.0, color: .lyricLabelColor, animated: true)
         return (layer, true)
+    }
+
+    func pause() {
+        textLayers.values.forEach { $0.pause() }
+    }
+
+    func update(_ offset: TimeInterval) {
+        textLayers.values.forEach { $0.update(offset) }
+    }
+
+    func resume() {
+        textLayers.values.forEach { $0.resume() }
     }
 }
 
@@ -209,7 +223,6 @@ extension LyricTextLayer: CALayerDelegate {
         layer.maskLayer.frame = bounds
         layer.maskLayer.contents = image.cgImage
         layer.progressLayer.frame = .init(origin: .zero, size: .init(width: .zero, height: bounds.height))
-        layer.setProgress(duration: 2.0, color: .lyricLabelColor, animated: true)
         #endif
     }
 }

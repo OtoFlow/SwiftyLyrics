@@ -4,7 +4,7 @@ import UIKit
 import AppKit
 #endif
 
-open class LyricTextNodeLayer: CALayer {
+final class LyricTextNodeLayer: CALayer {
 
     lazy var progressLayer: CALayer = {
         let layer = CALayer()
@@ -16,9 +16,11 @@ open class LyricTextNodeLayer: CALayer {
 
     lazy var maskLayer: CALayer = .init()
 
-    public var text: IndexedText!
+    var text: IndexedText!
 
-    public init(_ text: IndexedText) {
+    private var animationBeginTime: TimeInterval = .zero
+
+    init(_ text: IndexedText) {
         self.text = text
 
         super.init()
@@ -32,7 +34,7 @@ open class LyricTextNodeLayer: CALayer {
         setNeedsDisplay()
     }
 
-    public override init(layer: Any) {
+    override init(layer: Any) {
         super.init(layer: layer)
 
         guard let layer = layer as? LyricTextNodeLayer else { return }
@@ -40,11 +42,11 @@ open class LyricTextNodeLayer: CALayer {
         self.text = layer.text
     }
 
-    public required init?(coder: NSCoder) {
+    required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    open func setProgress(
+    func setProgress(
         duration: TimeInterval,
         color: PlatformColor,
         animated: Bool
@@ -53,12 +55,14 @@ open class LyricTextNodeLayer: CALayer {
 
         guard let end = text.end else { return }
 
+        animationBeginTime = CACurrentMediaTime() + text.begin
+
         if animated {
             let animation = CAKeyframeAnimation(keyPath: "bounds.size.width")
             animation.duration = end - text.begin
             animation.values = [0, bounds.width]
             animation.keyTimes = [0, 1]
-            animation.beginTime = CACurrentMediaTime() + text.begin
+            animation.beginTime = animationBeginTime
             animation.fillMode = .forwards
             animation.isRemovedOnCompletion = false
 
@@ -69,13 +73,41 @@ open class LyricTextNodeLayer: CALayer {
 
         let animation = CAKeyframeAnimation(keyPath: "position.y")
         animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        animation.duration = end - text.begin + 0.2
+        animation.duration = end - text.begin
         animation.values = [0, -1]
         animation.keyTimes = [0, 1]
-        animation.beginTime = CACurrentMediaTime() + text.begin
+        animation.beginTime = animationBeginTime
         animation.fillMode = .forwards
         animation.isRemovedOnCompletion = false
         animation.isAdditive = true
         add(animation, forKey: "translationAnimation")
+    }
+}
+
+// MARK: - Interactive
+
+extension LyricTextNodeLayer {
+
+    func pause() {
+        let pausedTime = convertTime(CACurrentMediaTime(), from: nil)
+        speed = 0.0
+        timeOffset = pausedTime
+    }
+
+    func update(_ offset: TimeInterval) {
+        if let end = text.end, offset > end {
+            timeOffset = animationBeginTime + (end - text.begin)
+        } else {
+            timeOffset = animationBeginTime + (offset - text.begin)
+        }
+    }
+
+    func resume() {
+        let pausedTime = timeOffset
+        speed = 1.0
+        timeOffset = 0.0
+        beginTime = 0.0
+        let timeSincePause = convertTime(CACurrentMediaTime(), from: nil) - pausedTime
+        beginTime = timeSincePause
     }
 }
