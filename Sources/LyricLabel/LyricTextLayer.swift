@@ -20,7 +20,7 @@ public final class LyricTextLayer: CALayer {
         didSet { setNeedsLayoutNodes() }
     }
 
-    public var textColor: PlatformColor = .lyricLabelColor {
+    public var textColor: PlatformColor = .lyricSecondaryLabelColor {
         didSet {
 
         }
@@ -28,7 +28,7 @@ public final class LyricTextLayer: CALayer {
 
     public override var bounds: CGRect {
         didSet {
-
+            _needsLayoutNodes = true
         }
     }
 
@@ -71,6 +71,15 @@ public final class LyricTextLayer: CALayer {
         layoutNodesIfNeeded()
     }
 
+    public func size(fitting size: CGSize) -> CGSize {
+        if textContainer.size != size {
+            _needsLayoutNodes = true
+            textContainer.size = size
+        }
+        layoutNodesIfNeeded()
+        return textBounds.size
+    }
+
     public func setNeedsLayoutNodes() {
         _needsLayoutNodes = true
         setNeedsLayout()
@@ -79,8 +88,6 @@ public final class LyricTextLayer: CALayer {
     public func layoutNodesIfNeeded() {
         guard _needsLayoutNodes else { return }
         _needsLayoutNodes = false
-
-        backgroundColor = PlatformColor.black.cgColor
 
         guard let textLine else { return }
 
@@ -152,7 +159,13 @@ public final class LyricTextLayer: CALayer {
     }
 }
 
+// MARK: - CALayerDelegate
+
 extension LyricTextLayer: CALayerDelegate {
+
+    public func action(for layer: CALayer, forKey event: String) -> (any CAAction)? {
+        NSNull()
+    }
 
     public func draw(_ layer: CALayer, in ctx: CGContext) {
         guard let layer = layer as? LyricTextNodeLayer else { return }
@@ -160,24 +173,38 @@ extension LyricTextLayer: CALayerDelegate {
         ctx.saveGState()
         ctx.setAllowsAntialiasing(true)
         ctx.setShouldAntialias(true)
+        ctx.setShouldSubpixelPositionFonts(true)
+        ctx.setShouldSubpixelQuantizeFonts(false)
         ctx.setAllowsFontSmoothing(true)
         ctx.setShouldSmoothFonts(true)
 
         #if canImport(UIKit)
         UIGraphicsPushContext(ctx)
+        #else
+        ctx.translateBy(x: 0, y: layer.bounds.height)
+        ctx.scaleBy(x: 1, y: -1)
+        let nsContext = NSGraphicsContext(cgContext: ctx, flipped: true)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = nsContext
+        #endif
 
         let range = NSRange(location: layer.text.index, length: layer.text.length)
-        let origin = layer.frame.origin
-        textLayoutManager.drawGlyphs(forGlyphRange: range, at: .init(x: -origin.x, y: -origin.y))
+        let frame = layer.frame
+        textLayoutManager.drawGlyphs(forGlyphRange: range, at: .init(x: -frame.minX, y: -frame.minY))
 
+        #if canImport(UIKit)
         UIGraphicsPopContext()
+        #else
+        NSGraphicsContext.restoreGraphicsState()
+        #endif
 
         ctx.restoreGState()
 
+        #if canImport(UIKit)
         let bounds = CGRect(origin: .zero, size: layer.bounds.size)
         let imageRenderer = UIGraphicsImageRenderer(bounds: bounds)
         let image = imageRenderer.image { context in
-            textLayoutManager.drawGlyphs(forGlyphRange: range, at: .init(x: -origin.x, y: -origin.y))
+            textLayoutManager.drawGlyphs(forGlyphRange: range, at: .init(x: -frame.minX, y: -frame.minY))
         }
         layer.maskLayer.frame = bounds
         layer.maskLayer.contents = image.cgImage

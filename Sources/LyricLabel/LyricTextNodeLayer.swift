@@ -16,7 +16,7 @@ open class LyricTextNodeLayer: CALayer {
 
     lazy var maskLayer: CALayer = .init()
 
-    public var text: IndexedText
+    public var text: IndexedText!
 
     public init(_ text: IndexedText) {
         self.text = text
@@ -25,9 +25,19 @@ open class LyricTextNodeLayer: CALayer {
 
         #if canImport(UIKit)
         contentsScale = max(UITraitCollection.current.displayScale, 2.0)
+        #else
+        contentsScale = NSScreen.main?.backingScaleFactor ?? 2.0
         #endif
 
         setNeedsDisplay()
+    }
+
+    public override init(layer: Any) {
+        super.init(layer: layer)
+
+        guard let layer = layer as? LyricTextNodeLayer else { return }
+
+        self.text = layer.text
     }
 
     public required init?(coder: NSCoder) {
@@ -57,9 +67,8 @@ open class LyricTextNodeLayer: CALayer {
             progressLayer.bounds.size.width = bounds.width
         }
 
-
         let animation = CAKeyframeAnimation(keyPath: "position.y")
-        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
         animation.duration = end - text.begin + 0.2
         animation.values = [0, -1]
         animation.keyTimes = [0, 1]

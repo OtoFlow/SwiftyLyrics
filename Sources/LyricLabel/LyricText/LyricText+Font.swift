@@ -1,6 +1,10 @@
 import SwiftUI
 import SwiftyLyrics
 
+#if os(macOS) && compiler(>=6)
+extension PlatformFont: @retroactive @unchecked Sendable { }
+#endif
+
 struct LyricTextFont: EnvironmentKey {
     static let defaultValue: PlatformFont? = nil
 }

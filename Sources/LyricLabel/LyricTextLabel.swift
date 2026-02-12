@@ -18,31 +18,33 @@ open class LyricTextLabel: PlatformView {
     }
 
     open override func sizeThatFits(_ size: CGSize) -> CGSize {
-        textLayer.bounds.size = size
-        textLayer.layoutNodesIfNeeded()
-        return textLayer.textBounds.size
+        textLayer.size(fitting: size)
     }
     #else
     public let textLayer = LyricTextLayer()
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
-
-        wantsLayer = true
-        layer?.addSublayer(textLayer)
+        commonInit()
     }
 
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
+        commonInit()
+    }
 
+    private func commonInit() {
         wantsLayer = true
         layer?.addSublayer(textLayer)
     }
-    
+
     open func sizeThatFits(_ size: CGSize) -> CGSize {
-        textLayer.bounds.size = size
-        textLayer.layoutNodesIfNeeded()
-        return textLayer.textBounds.size
+        textLayer.size(fitting: size)
+    }
+
+    open override func layout() {
+        super.layout()
+        textLayer.frame = bounds
     }
     #endif
 }
